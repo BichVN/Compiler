@@ -1,4 +1,7 @@
 Program Example1; (* Example 1 *)
+VAR s:STRING;
 Begin
-a := a % b;
+ a:="asdjkfd";
+ m:=a*b;
+ (*a:= a % b;*)
 End. (* Example 1 *)

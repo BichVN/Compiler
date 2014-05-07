@@ -32,7 +32,6 @@ void compileProgram(void) {
   assert("Parsing a Program ....");
   eat(KW_PROGRAM);
   eat(TK_IDENT);
-  
   eat(SB_SEMICOLON);
   compileBlock();
   eat(SB_PERIOD);
@@ -89,11 +88,8 @@ void compileConstDecls(void) {
     compileConstDecl();
     compileConstDecls();
     break;
-  case TK_STRING:
-    compileConstDecl();
-    compileConstDecls();
     // EmptySt needs to check FOLLOW tokens
-  case KW_TYPE:
+   case KW_TYPE:
   case KW_VAR:
   case KW_BEGIN:
   case KW_FUNCTION:
@@ -225,6 +221,7 @@ void compileUnsignedConstant(void) {
         case TK_NUMBER:
         case TK_IDENT:
         case TK_CHAR:
+        case TK_STRING:
             eat(lookAhead->tokenType);
             break;
         default:
@@ -237,7 +234,6 @@ void compileConstant(void) {
   // TODO
   switch(lookAhead->tokenType){
     case SB_PLUS:
-    case SB_MOD:
     case SB_MINUS:
         eat(lookAhead->tokenType);
         compileConstant2();
@@ -246,6 +242,9 @@ void compileConstant(void) {
     case TK_IDENT:
     case TK_NUMBER:
         compileConstant2();
+        break;
+    case TK_STRING:
+        eat(TK_STRING);
         break;
     case TK_CHAR:
         eat(TK_CHAR);
@@ -262,6 +261,7 @@ void compileConstant2(void) {
     switch(lookAhead->tokenType){
         case TK_IDENT:
         case TK_NUMBER:
+	case TK_CHAR:
             eat(lookAhead->tokenType);
             break;
         default:
@@ -275,6 +275,7 @@ void compileType(void) {
   switch(lookAhead->tokenType){
     case KW_INTEGER:
     case KW_CHAR:
+    case KW_STRING:
     case TK_IDENT:
         eat(lookAhead->tokenType);
         break;
@@ -296,6 +297,7 @@ void compileBasicType(void) {
   // TODO
     switch(lookAhead->tokenType){
         case KW_INTEGER:
+        case KW_STRING:
         case KW_CHAR:
             eat(lookAhead->tokenType);
             break;
@@ -389,7 +391,7 @@ void compileStatements2(void) {
 void compileStatement(void) {
   switch (lookAhead->tokenType) {
   case TK_IDENT:
-    compileAssignSt();
+      compileAssignSt();
     break;
   case KW_CALL:
     compileCallSt();
@@ -517,8 +519,8 @@ void compileArguments(void) {
   case KW_ELSE:
   case SB_TIMES:
   case SB_SLASH:
-  case SB_PLUS:
   case SB_MOD:
+  case SB_PLUS:
   case SB_MINUS:
   case SB_EQ:
   case SB_NEQ:
@@ -593,10 +595,11 @@ void compileExpression(void) {
   case TK_CHAR:
   case TK_NUMBER:
   case SB_LPAR:
+  case TK_STRING:
     compileExpression2();
     break;
   default:
-    error(ERR_INVALIDSTATEMENT, lookAhead->lineNo, lookAhead->colNo);
+    error(ERR_INVALIDEXPRESSION, lookAhead->lineNo, lookAhead->colNo);
     break;
   }
   assert("Expression parsed");
@@ -635,7 +638,7 @@ void compileExpression3(void) {
   case KW_ELSE:
     break;
   default:
-    error(ERR_INVALIDSTATEMENT, lookAhead->lineNo, lookAhead->colNo);
+    error(ERR_INVALIDEXPRESSION, lookAhead->lineNo, lookAhead->colNo);
     break;
   }
 }
@@ -651,14 +654,13 @@ void compileTerm2(void) {
   switch (lookAhead->tokenType) {
   case SB_TIMES:
   case SB_SLASH:
+  case SB_MOD:
     eat(lookAhead->tokenType);
     compileFactor();
     compileTerm2();
     break;
   case SB_PLUS:
-  case SB_MOD:
-  case SB_MINUS:
-  
+  case SB_MINUS:  
   case SB_EQ:
   case SB_NEQ:
   case SB_LE:
@@ -676,7 +678,7 @@ void compileTerm2(void) {
   case KW_THEN:
     break;
   default:
-    error(ERR_INVALIDSTATEMENT, lookAhead->lineNo, lookAhead->colNo);
+    error(ERR_INVALIDTERM, lookAhead->lineNo, lookAhead->colNo);
     break;
   }
 }
@@ -688,15 +690,15 @@ void compileFactor(void) {
     eat(TK_NUMBER);
     break;
   case TK_IDENT:
-    eat(TK_IDENT);
+     eat(TK_IDENT);
     compileIndexes();
     compileArguments();
     break;
-  case TK_CHAR:
-    eat(TK_CHAR);
-    break;
   case TK_STRING:
     eat(TK_STRING);
+  break;
+  case TK_CHAR:
+    eat(TK_CHAR);
     break;
   case SB_LPAR:
     compileExpression();
@@ -719,8 +721,8 @@ void compileIndexes(void) {
     break;
   case SB_TIMES:
   case SB_SLASH:
-  case SB_PLUS:
   case SB_MOD:
+  case SB_PLUS:
   case SB_MINUS:  
   case SB_EQ:
   case SB_NEQ:
